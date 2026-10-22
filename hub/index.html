@@ -1,184 +1,116 @@
 <!doctype html>
 <!--
-  The Gilded Comet lobby: pick a game.  Copied next to the web build as Builds/WebGL/hub/ by the web build
-  (RWSceneBuilder.BatchWebGL); Tools/server/serve.py opens it first.  Both games are the same build: the slot link
-  adds ?slots=1, which seats the player at Lucky Orbit.  Pictures are renders from the game scene (img/).
+  The Gilded Comet lobby: a small 3D room (lobby.js, three.js bundled in lib/) with the three games standing in it.
+  Copied next to the web build as Builds/WebGL/hub/ by the web build (RWSceneBuilder.BatchWebGL); Tools/server/serve.py
+  opens it first.  All games are the same build: the slot link adds ?slots=1 and the blackjack link ?bj=1.
+  If WebGL isn't available (or scripts are off) the plain list of links under #fallback is shown instead.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Gilded Comet</title>
-<meta name="description" content="Play-money casino games: European roulette and the Lucky Orbit slot machine.">
+<meta name="description" content="Play-money casino games in a 3D lobby: European roulette, the Lucky Orbit slot machine and blackjack.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&family=Limelight&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Limelight&display=swap" rel="stylesheet">
 <style>
   :root {
-    --night: #1A0B2E;        /* the room's background */
-    --plum: #2A0F45;
-    --velvet: #5E0B1E;
-    --gold: #F2C14E;         /* the felt print gold */
-    --gold-deep: #C9952E;
-    --ivory: #F1E9D8;        /* the reel strips */
-    --ivory-dim: #CFC3D9;
-    --teal: #19E3D6;
-    --bulb-off: rgba(242, 193, 78, 0.28);
+    --night: #120720; --plum: #2A0F45; --velvet: #5E0B1E;
+    --gold: #F2C14E; --gold-deep: #C9952E; --ivory: #F1E9D8; --ivory-dim: #CFC3D9; --teal: #19E3D6;
     --display: "Limelight", "Didot", "Bodoni 72", Georgia, serif;
     --body: "Figtree", "Segoe UI", system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body {
-    min-height: 100vh;
-    background:
-      radial-gradient(120% 70% at 50% -10%, rgba(94, 11, 30, 0.55), transparent 60%),
-      linear-gradient(180deg, rgba(26, 11, 46, 0.86), rgba(26, 11, 46, 0.97) 55%, var(--night)),
-      url("img/room.jpg") center top / cover no-repeat fixed,
-      var(--night);
-    color: var(--ivory);
-    font: 400 17px/1.55 var(--body);
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 56px 24px 40px; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: var(--ivory); font: 400 16px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; outline: none; }
+  .ui { position: fixed; z-index: 2; pointer-events: none; }
+  .ui > * { pointer-events: auto; }
 
-  header { text-align: center; margin-bottom: 44px; }
-  .sign {
-    display: inline-block;
-    margin: 0;
-    font: 400 clamp(40px, 7.4vw, 84px)/1.02 var(--display);
-    letter-spacing: 0.02em;
-    color: var(--gold);
-    text-shadow: 0 0 18px rgba(242, 193, 78, 0.45), 0 0 2px rgba(255, 236, 190, 0.9);
-  }
-  .welcome { margin: 14px auto 0; max-width: 56ch; color: var(--ivory-dim); font-size: 18px; }
+  #loading { position: fixed; z-index: 3; left: 50%; top: 50%; transform: translate(-50%,-50%); font: 400 20px var(--display); color: var(--gold); transition: opacity .5s; pointer-events: none; }
+  body.loaded #loading { opacity: 0; }
+  .brand { top: max(16px, env(safe-area-inset-top)); left: 20px; }
+  .brand h1 { margin: 0; font: 400 22px/1.1 var(--display); color: var(--gold); text-shadow: 0 0 12px rgba(242,193,78,.4); }
+  .brand p { margin: 2px 0 0; font-size: 13px; color: var(--ivory-dim); max-width: 38ch; }
 
-  .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+  #hint { top: max(16px, env(safe-area-inset-top)); right: 20px; text-align: right; font-size: 14px; color: var(--ivory-dim); transition: opacity .6s; max-width: 30ch; }
+  #hint.gone { opacity: 0; pointer-events: none; }
 
-  /* a doorway: the picture in a frame of marquee bulbs */
-  .door { position: relative; display: flex; flex-direction: column; text-decoration: none; color: inherit; }
-  .marquee {
-    position: relative;
-    padding: 14px;
-    border-radius: 18px;
-    background: var(--velvet);
-  }
-  .marquee::before {
-    content: "";
-    position: absolute; inset: 0;
-    border-radius: inherit;
-    padding: 14px;
-    background:
-      radial-gradient(circle at 11px 7px, var(--bulb) 0 3.2px, transparent 3.8px) var(--x, 0) 0 / 22px 14px repeat-x,
-      radial-gradient(circle at 11px 7px, var(--bulb) 0 3.2px, transparent 3.8px) var(--x, 0) 100% / 22px 14px repeat-x,
-      radial-gradient(circle at 7px 11px, var(--bulb) 0 3.2px, transparent 3.8px) 0 var(--x, 0) / 14px 22px repeat-y,
-      radial-gradient(circle at 7px 11px, var(--bulb) 0 3.2px, transparent 3.8px) 100% var(--x, 0) / 14px 22px repeat-y;
-    --bulb: var(--bulb-off);
-    /* bulbs all round the frame on a 22 px pitch, kept to the 14 px band outside the picture */
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    pointer-events: none;
-  }
-  .door:hover .marquee::before, .door:focus-visible .marquee::before {
-    --bulb: #FFE6A3;
-    filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.9));
-    animation: chase 0.9s steps(2) infinite;
-  }
-  @keyframes chase { to { --x: 22px; } }
-  @property --x { syntax: "<length>"; inherits: false; initial-value: 0px; }
-  .picture {
-    display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover;
-    border-radius: 6px;
-    box-shadow: inset 0 0 0 1px rgba(242, 193, 78, 0.35);
-    background: var(--plum);
-  }
+  .tabs { left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 8px; padding: 6px; border-radius: 999px; background: rgba(18,7,32,.72); backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgba(242,193,78,.3); }
+  .tabs button { font: 600 15px var(--body); color: var(--ivory); background: transparent; border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; }
+  .tabs button:hover { background: rgba(242,193,78,.14); }
+  .tabs button[aria-pressed="true"] { background: var(--gold); color: #2A1300; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 
-  .card-text { padding: 22px 6px 0; }
-  .door h2 { margin: 0; font: 400 clamp(30px, 3.4vw, 40px)/1.1 var(--display); color: var(--gold); }
-  .door p { margin: 8px 0 0; max-width: 46ch; color: var(--ivory-dim); }
-  .facts { display: flex; flex-wrap: wrap; gap: 6px 26px; margin: 16px 0 0; padding: 0; }
-  .facts div { display: flex; flex-direction: column; }
-  .facts dt { font-size: 14px; color: var(--ivory-dim); }
-  .facts dd { margin: 0; font-weight: 700; font-size: 19px; color: var(--ivory); font-variant-numeric: tabular-nums; }
-  .play {
-    display: inline-block;
-    margin-top: 22px;
-    padding: 13px 26px;
-    border-radius: 999px;
-    background: var(--gold);
-    color: #2A1300;
-    font-weight: 700; font-size: 17px;
-    box-shadow: 0 0 0 2px var(--gold-deep) inset;
-  }
-  .door:hover .play, .door:focus-visible .play { background: #FFD772; }
-  .door:focus-visible { outline: none; }
-  .door:focus-visible .marquee { box-shadow: 0 0 0 3px var(--teal); }
+  #panel { left: 28px; bottom: 90px; width: min(400px, calc(100vw - 40px)); padding: 22px 24px 22px; border-radius: 18px; background: rgba(18,7,32,.82); backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(242,193,78,.4), 0 18px 50px rgba(0,0,0,.5); opacity: 0; transform: translateY(14px); transition: opacity .3s, transform .3s; }
+  #panel.on { opacity: 1; transform: none; }
+  #panel[hidden] { display: none; }
+  #panel h2 { margin: 0; font: 400 34px/1.1 var(--display); color: var(--gold); }
+  #panel p { margin: 8px 0 0; color: var(--ivory-dim); }
+  #p-facts { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 14px 0 0; padding: 0; }
+  #p-facts div { display: flex; flex-direction: column; }
+  #p-facts dt { font-size: 13px; color: var(--ivory-dim); }
+  #p-facts dd { margin: 0; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  #p-play { display: inline-block; padding: 12px 24px; border-radius: 999px; background: var(--gold); color: #2A1300; font-weight: 700; text-decoration: none; box-shadow: 0 0 0 2px var(--gold-deep) inset; }
+  #p-play:hover { background: #FFD772; }
+  #p-back { font: 600 15px var(--body); color: var(--ivory); background: transparent; border: 0; padding: 10px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-  .soon { margin-top: 56px; padding-top: 26px; border-top: 1px solid rgba(242, 193, 78, 0.25); }
-  .soon h3 { margin: 0 0 6px; font: 700 18px/1.3 var(--body); color: var(--ivory); }
-  .soon p { margin: 0; color: var(--ivory-dim); max-width: 70ch; }
-  .soon b { color: var(--ivory); font-weight: 500; }
-
-  footer { margin-top: 40px; color: var(--ivory-dim); font-size: 14px; max-width: 72ch; }
-  footer p { margin: 6px 0; }
+  .note { right: 20px; bottom: max(18px, env(safe-area-inset-bottom)); font-size: 12px; color: var(--ivory-dim); max-width: 30ch; text-align: right; opacity: .8; transition: opacity .3s; }
+  body.focused .note { opacity: 0; pointer-events: none; }
 
   @media (max-width: 760px) {
-    .wrap { padding-top: 36px; }
-    .games { grid-template-columns: 1fr; gap: 40px; }
-    body { font-size: 16px; }
+    .brand { left: 14px; } .brand p { display: none; }
+    #hint { right: 14px; font-size: 13px; max-width: 20ch; }
+    .tabs { width: calc(100vw - 20px); justify-content: space-between; }
+    .tabs button { padding: 10px 10px; font-size: 14px; flex: 1; }
+    #panel { left: 10px; right: 10px; width: auto; bottom: 78px; padding: 16px 18px; }
+    #panel h2 { font-size: 28px; }
+    .note { display: none; }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .door:hover .marquee::before, .door:focus-visible .marquee::before { animation: none; }
-  }
+  @media (prefers-reduced-motion: reduce) { #panel, #hint { transition: none; } }
+
+  /* no 3D: a plain list of the games */
+  #fallback { display: none; position: relative; z-index: 3; max-width: 760px; margin: 0 auto; padding: 56px 24px; overflow: auto; height: 100%; }
+  body.no3d { overflow: auto; } body.no3d #stage, body.no3d .ui { display: none; } body.no3d #fallback { display: block; }
+  #fallback h1 { font: 400 clamp(36px, 8vw, 64px)/1.05 var(--display); color: var(--gold); margin: 0 0 8px; }
+  #fallback a.g { display: block; margin: 18px 0; padding: 20px 22px; border-radius: 16px; background: var(--plum); color: inherit; text-decoration: none; box-shadow: 0 0 0 1px rgba(242,193,78,.35); }
+  #fallback a.g:hover { background: #3a1760; }
+  #fallback h2 { margin: 0; font: 400 28px/1.15 var(--display); color: var(--gold); }
+  #fallback p { margin: 6px 0 0; color: var(--ivory-dim); }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1 class="sign">The Gilded Comet</h1>
-    <p class="welcome">Choose a game. Everything here is played with free play credits, and one balance is shared by every game in this browser.</p>
-  </header>
+<div id="loading" role="status">Setting up the lobby</div>
+<canvas id="stage" tabindex="-1" aria-label="The Gilded Comet lobby. Use the buttons below to pick a game."></canvas>
 
-  <main class="games">
-    <a class="door" href="../index.html">
-      <div class="marquee"><img class="picture" src="img/roulette.jpg" alt="The roulette wheel, close up, with the ball in a pocket" width="960" height="720"></div>
-      <div class="card-text">
-        <h2>Orbit Royale</h2>
-        <p>European roulette with a single zero. Bet on the felt or the racetrack, then watch the ball settle.</p>
-        <dl class="facts">
-          <div><dt>Returns to player</dt><dd>97.3%</dd></div>
-          <div><dt>Chips</dt><dd>1 to 500</dd></div>
-        </dl>
-        <span class="play">Play roulette</span>
-      </div>
-    </a>
+<div class="ui brand"><h1>The Gilded Comet</h1><p>Play credits only. One balance is shared by every game in this browser.</p></div>
+<div class="ui" id="hint">Move the mouse to look around. Click a game to step up to it.</div>
 
-    <a class="door" href="../index.html?slots=1">
-      <div class="marquee"><img class="picture" src="img/lucky-orbit.jpg" alt="Two Lucky Orbit slot machines in the slot bank" width="960" height="720"></div>
-      <div class="card-text">
-        <h2>Lucky Orbit</h2>
-        <p>A five-reel, twenty-line fruit machine. The Lucky Planet is wild, and three Shooting Stars start ten free spins with every win multiplied.</p>
-        <dl class="facts">
-          <div><dt>Returns to player</dt><dd>96.00%</dd></div>
-          <div><dt>Bets</dt><dd>20 to 400</dd></div>
-          <div><dt>Biggest win</dt><dd>2,500× bet</dd></div>
-        </dl>
-        <span class="play">Play Lucky Orbit</span>
-      </div>
-    </a>
-  </main>
+<section class="ui" id="panel" hidden aria-live="polite">
+  <h2 id="p-name"></h2>
+  <p id="p-blurb"></p>
+  <dl id="p-facts"></dl>
+  <div class="row"><a id="p-play" href="#">Play</a><button id="p-back" type="button">Back to the lobby</button></div>
+</section>
 
-  <section class="soon" aria-labelledby="soon-title">
-    <h3 id="soon-title">Coming to the slot bank</h3>
-    <p><b>Nebula Bloom</b>, five reels and twenty lines with free spins, and <b>Halo Wheel</b>, 243 ways to win with a bonus wheel.</p>
-  </section>
+<nav class="ui tabs" aria-label="Games">
+  <button type="button" data-tab="roulette" aria-pressed="false">Roulette</button>
+  <button type="button" data-tab="slots" aria-pressed="false">Lucky Orbit</button>
+  <button type="button" data-tab="blackjack" aria-pressed="false">Blackjack</button>
+</nav>
+<p class="ui note">Play credits have no cash value. They can't be bought, won for real or cashed out. The wheel, reels and cards you see in the lobby are decoration and don't pay.</p>
 
-  <footer>
-    <p>Play credits have no cash value. They can't be bought, won for real or cashed out.</p>
-    <p>Every result is drawn by a random number generator before the wheel or the reels move; what you see only shows that result.</p>
-  </footer>
-</div>
+<main id="fallback">
+  <h1>The Gilded Comet</h1>
+  <p>Choose a game. Everything here is played with free play credits, and one balance is shared by every game in this browser.</p>
+  <a class="g" href="../index.html"><h2>Orbit Royale</h2><p>European roulette with a single zero. Returns to player 97.3%.</p></a>
+  <a class="g" href="../index.html?slots=1"><h2>Lucky Orbit</h2><p>A five-reel video slot with 20 lines and free spins.</p></a>
+  <a class="g" href="../index.html?bj=1"><h2>Blackjack</h2><p>Six decks, dealer stands on soft 17, blackjack pays 3 to 2.</p></a>
+</main>
+<noscript><style>#stage, .ui { display: none; } #fallback { display: block; }</style></noscript>
+
+<script type="module" src="lobby.js?v=14"></script>
+<script>addEventListener("error", function (e) { if (e && e.message && /module|import|three|WebGL/i.test(e.message)) document.body.classList.add("no3d"); });</script>
 </body>
 </html>
