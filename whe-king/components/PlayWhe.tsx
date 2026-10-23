@@ -5,6 +5,7 @@ import {
 } from "@/lib/data";
 import { fx, setMuted } from "@/lib/fx";
 import { useDrawClock } from "@/lib/useDraw";
+import { THEMES, useTheme } from "@/lib/useTheme";
 import Countdown from "./Countdown";
 import Confetti from "./Confetti";
 
@@ -14,6 +15,7 @@ type Ticket = { id: string; draw: string; issue: number; picks: number[]; base: 
 const money = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const secs = (i: number) => DRAWS[i].h * 3600 + DRAWS[i].m * 60;
 const MAX_PICKS = 10;
+const ROULETTE_RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const START_BALANCE = 500;
 
 function StakeRow({ label, value, onChange, allowOff }: { label: string; value: number; onChange: (v: number) => void; allowOff?: boolean }) {
@@ -47,6 +49,7 @@ function StakeRow({ label, value, onChange, allowOff }: { label: string; value: 
 
 export default function PlayWhe() {
   const clock = useDrawClock();
+  const [theme, setTheme] = useTheme();
   const [drawIdx, setDrawIdx] = useState<number | null>(null);
   const [picks, setPicks] = useState<number[]>([]);
   const [base, setBase] = useState(5);
@@ -140,6 +143,15 @@ export default function PlayWhe() {
         </div>
       </div>
 
+      <nav className="themes" aria-label="Template">
+        <span>TEMPLATE</span>
+        {THEMES.map((t) => (
+          <button key={t.id} className={`theme-btn ${theme === t.id ? "on" : ""}`} aria-pressed={theme === t.id} onClick={() => { fx.chip(); setTheme(t.id); }}>
+            <i style={{ background: t.swatch }} />{t.name}
+          </button>
+        ))}
+      </nav>
+
       <header className="top">
         <div className="brand">
           <div className="logo">W</div>
@@ -216,7 +228,7 @@ export default function PlayWhe() {
               const on = picks.includes(n);
               const hot = n in HOT;
               return (
-                <button key={n} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${name}, pays ${payoutFor(n)} to 1`}
+                <button key={n} data-c={ROULETTE_RED.has(n) ? "r" : "b"} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${name}, pays ${payoutFor(n)} to 1`}
                   className={`ball-wrap ${on ? "on" : ""} ${hot ? "hot" : ""} ${pop === n ? "pop" : ""} ${spinning === n ? "spin" : ""}`}>
                   <span className="ball">
                     <span className="ball-num">{n}</span>

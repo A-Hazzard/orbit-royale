@@ -1,0 +1,221 @@
+/* Five templates. Each overrides the tokens in globals.css and adds a few structural touches.
+   Selected via <html data-theme="...">; "gold" is the default and uses the base tokens. */
+
+/* ───────── 1 · MIDNIGHT GOLD (Vegas night, glossy) ───────── */
+[data-theme="gold"] .aurora { animation: drift 14s ease-in-out infinite alternate; }
+[data-theme="gold"] .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .07) 50%, transparent 60%); transform: translateX(-100%); animation: sheen 5s ease-in-out infinite; pointer-events: none; }
+@keyframes drift { to { transform: scale(1.12) translateY(-2%); } }
+
+/* ───────── 2 · GREEN FELT (card-table baize, brass, casino chips) ───────── */
+:root[data-theme="felt"] {
+  --bg: #0b3d27;
+  --bg-fx:
+    radial-gradient(90% 60% at 50% 10%, #1b7a4b 0, #0f5736 45%, #082a1b 100%),
+    repeating-radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .03) 0 1px, transparent 1px 3px);
+  --text: #f5eedb; --muted: #b9cdb8;
+  --panel: rgba(0, 0, 0, .22); --fill: rgba(0, 0, 0, .25); --line: rgba(222, 184, 100, .5);
+  --accent: #e6c06a; --accent-2: #b8923f; --accent-glow: rgba(230, 192, 106, .35); --link: #f5d58a;
+  --radius-card: 14px; --radius-ui: 10px; --blur: none;
+  --card-shadow: inset 0 0 0 4px rgba(0, 0, 0, .12), inset 0 0 0 5px rgba(222, 184, 100, .22);
+  --font-body: var(--font-lora); --font-head: var(--font-playfair); --font-ball: var(--font-playfair); --font-time: var(--font-playfair);
+  --brand-grad: linear-gradient(180deg, #fff1c4, #e6c06a 60%, #b8923f);
+  --logo-bg: radial-gradient(circle at 35% 30%, #d83a3a, #8e1018); --logo-text: #fff5dc;
+  --ticker-bg: #07261a;
+  --digit: #f5eedb; --digit-warn: #f0c24f; --digit-crit: #ff6a55;
+  --cd-bg: linear-gradient(#082a1b, #0b3a26); --cd-line: rgba(222, 184, 100, .45); --cd-glow: 0 2px 0 rgba(0, 0, 0, .5);
+  --live: #f0c24f;
+  --pot-bg: linear-gradient(180deg, rgba(0, 0, 0, .3), rgba(0, 0, 0, .15)); --pot-color: #f5d58a; --pot-sub: #e8b1a8;
+  --tab-on-bg: linear-gradient(180deg, #c42b33, #8e1018); --tab-on-line: #f0d28a; --tab-on-shadow: 0 4px 0 #5a0a10; --tab-on-text: #fff5dc; --tab-on-sub: #f7c9c4;
+  --win-bg: rgba(0, 0, 0, .25); --win-line: rgba(222, 184, 100, .7); --hit-bg: #f0c24f; --hit-text: #3a2a00;
+  /* ivory casino chips */
+  --ball-bg: radial-gradient(circle at 50% 40%, #fffaf0 0, #f3ead2 55%, #d9cba6 100%);
+  --ball-shadow: 0 0 0 4px #0c4a30, 0 0 0 5px rgba(222, 184, 100, .7), 0 5px 8px rgba(0, 0, 0, .55);
+  --ball-text: #0c4a30; --ball-text-fx: none;
+  --sel-bg: radial-gradient(circle at 50% 40%, #e24a4a 0, #b8202a 60%, #7a0d15 100%);
+  --sel-shadow: 0 0 0 4px #0c4a30, 0 0 0 5px #f0d28a, 0 0 22px rgba(240, 210, 138, .7), 0 8px 12px rgba(0, 0, 0, .5);
+  --sel-text: #fff5dc; --sel-text-fx: none; --sel-accent: #f0d28a; --hot-pay: #f0c24f;
+  --lucky-bg: linear-gradient(180deg, #f0d28a, #c49a3c); --lucky-text: #2c1d00; --lucky-shadow: 0 3px 0 #7c5c14;
+  --sheet-bg: linear-gradient(180deg, #0e4a30, #082a1b); --sheet-line: rgba(222, 184, 100, .7); --sheet-shadow: 0 -10px 30px rgba(0, 0, 0, .5);
+  --pick-bg: radial-gradient(circle at 50% 40%, #e24a4a, #8e1018); --pick-text: #fff5dc; --pick-shadow: 0 0 0 2px #f0d28a; --pick-x-bg: #082a1b;
+  --tier-on-bg: linear-gradient(180deg, #f0d28a, #c49a3c); --tier-on-text: #2c1d00; --tier-on-sub: #5c4208; --tier-on-line: #fff1c4; --tier-on-shadow: 0 3px 0 #7c5c14;
+  --chip-on-bg: radial-gradient(circle at 50% 40%, #e24a4a, #8e1018); --chip-on-line: #f0d28a; --chip-on-shadow: 0 2px 0 #4a0910; --chip-on-text: #fff5dc;
+  --lock-bg: linear-gradient(180deg, #d63a40, #a31822 55%, #7a0d15); --lock-text: #fff5dc;
+  --lock-shadow: 0 5px 0 #4a0910, 0 0 0 2px #f0d28a, 0 10px 20px rgba(0, 0, 0, .5); --lock-shadow-2: 0 5px 0 #4a0910, 0 0 0 2px #fff1c4, 0 0 26px rgba(240, 210, 138, .6);
+  --modal-bg: rgba(2, 20, 12, .8);
+  --stub-bg: linear-gradient(170deg, #0f5736, #082a1b); --stub-line: #e6c06a; --stub-shadow: 0 20px 60px rgba(0, 0, 0, .7); --stub-inner: rgba(0, 0, 0, .3);
+  --stamp-bg: linear-gradient(180deg, #d63a40, #8e1018); --stamp-text: #fff5dc;
+  --toast-bg: #f5eedb; --toast-text: #0b3d27;
+}
+/* chip edge-spots */
+[data-theme="felt"] .ball::before, [data-theme="felt"] .stub-ball::before {
+  content: ""; position: absolute; inset: 2px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(#0c4a30 0 12deg, transparent 12deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%); mask: radial-gradient(circle, transparent 66%, #000 67%);
+}
+[data-theme="felt"] .ball::after { content: ""; position: absolute; inset: 20%; border-radius: 50%; border: 1.5px solid rgba(12, 74, 48, .45); pointer-events: none; }
+[data-theme="felt"] .ball-wrap.on .ball::before { background: repeating-conic-gradient(#fff5dc 0 12deg, transparent 12deg 30deg); }
+[data-theme="felt"] .ball-wrap.on .ball::after { border-color: rgba(255, 245, 220, .5); }
+[data-theme="felt"] .ball-num { font-weight: 800; }
+[data-theme="felt"] .brand h1, [data-theme="felt"] .grid-head h2 { text-transform: uppercase; letter-spacing: .08em; }
+[data-theme="felt"] .btn.lock span { font-weight: 800; text-transform: uppercase; }
+
+/* ───────── 3 · NOIR DECO (Monte Carlo, black + champagne, Art Deco) ───────── */
+:root[data-theme="deco"] {
+  --bg: #0a0a0c;
+  --bg-fx:
+    radial-gradient(70% 45% at 50% 0%, rgba(212, 175, 100, .14), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(212, 175, 100, .035) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, rgba(212, 175, 100, .035) 0 1px, transparent 1px 22px);
+  --text: #f3ead7; --muted: #a39a86;
+  --panel: rgba(18, 17, 16, .85); --fill: rgba(212, 175, 100, .07); --line: rgba(212, 175, 100, .55);
+  --accent: #d9b874; --accent-2: #a98743; --accent-glow: rgba(217, 184, 116, .3); --link: #e8cf96;
+  --radius-card: 2px; --radius-ui: 2px; --blur: none;
+  --card-shadow: inset 0 0 0 4px #0a0a0c, inset 0 0 0 5px rgba(212, 175, 100, .35);
+  --font-head: var(--font-limelight); --font-ball: var(--font-limelight); --font-time: var(--font-limelight);
+  --brand-grad: linear-gradient(180deg, #f4e3b4, #d9b874 55%, #a98743);
+  --logo-bg: linear-gradient(145deg, #f4e3b4, #d9b874 50%, #a98743); --logo-text: #15110a;
+  --ticker-bg: #000;
+  --digit: #e8cf96; --digit-warn: #e0a24a; --digit-crit: #e5484d;
+  --cd-bg: #050505; --cd-line: rgba(212, 175, 100, .6); --cd-glow: none; --live: #d9b874;
+  --pot-bg: linear-gradient(90deg, rgba(212, 175, 100, .12), rgba(212, 175, 100, .02)); --pot-color: #e8cf96; --pot-sub: #c9a2a2;
+  --tab-on-bg: linear-gradient(180deg, #e8cf96, #b4924f); --tab-on-line: #f4e3b4; --tab-on-shadow: 0 0 0 3px #0a0a0c, 0 0 0 4px #d9b874; --tab-on-text: #15110a; --tab-on-sub: #4a3a16;
+  --win-bg: rgba(212, 175, 100, .08); --win-line: rgba(212, 175, 100, .7); --hit-bg: #d9b874; --hit-text: #15110a;
+  /* black onyx pieces with a gold ring */
+  --ball-bg: radial-gradient(circle at 35% 28%, #3a3a3e, #0f0f11 60%, #000);
+  --ball-shadow: 0 0 0 2px #d9b874, 0 0 0 4px #0a0a0c, 0 0 0 5px rgba(212, 175, 100, .45), 0 6px 12px rgba(0, 0, 0, .7);
+  --ball-text: #e8cf96; --ball-text-fx: none;
+  --sel-bg: radial-gradient(circle at 35% 28%, #fff1c9, #e0c27c 55%, #a98743);
+  --sel-shadow: 0 0 0 2px #0a0a0c, 0 0 0 4px #f4e3b4, 0 0 26px rgba(232, 207, 150, .7), 0 6px 12px rgba(0, 0, 0, .7);
+  --sel-text: #15110a; --sel-text-fx: none; --sel-accent: #e8cf96; --hot-pay: #e0a24a;
+  --lucky-bg: linear-gradient(180deg, #e8cf96, #b4924f); --lucky-text: #15110a; --lucky-shadow: 0 0 0 2px #0a0a0c, 0 0 0 3px #d9b874;
+  --sheet-bg: linear-gradient(180deg, #17150f, #070707); --sheet-line: #d9b874; --sheet-shadow: 0 -12px 40px rgba(0, 0, 0, .8);
+  --pick-bg: linear-gradient(145deg, #f4e3b4, #b4924f); --pick-text: #15110a; --pick-shadow: 0 0 0 2px #0a0a0c, 0 0 0 3px #d9b874; --pick-x-bg: #000;
+  --tier-on-bg: linear-gradient(180deg, #e8cf96, #b4924f); --tier-on-text: #15110a; --tier-on-sub: #4a3a16; --tier-on-line: #f4e3b4; --tier-on-shadow: 0 0 0 2px #0a0a0c, 0 0 0 3px #d9b874;
+  --chip-on-bg: linear-gradient(180deg, #e8cf96, #b4924f); --chip-on-line: #f4e3b4; --chip-on-shadow: none; --chip-on-text: #15110a;
+  --lock-bg: linear-gradient(180deg, #f4e3b4, #d9b874 50%, #a98743); --lock-text: #15110a;
+  --lock-shadow: 0 0 0 2px #0a0a0c, 0 0 0 4px #d9b874, 0 10px 24px rgba(0, 0, 0, .7); --lock-shadow-2: 0 0 0 2px #0a0a0c, 0 0 0 4px #f4e3b4, 0 0 30px rgba(232, 207, 150, .5);
+  --modal-bg: rgba(0, 0, 0, .85);
+  --stub-bg: linear-gradient(170deg, #1b1913, #08080a); --stub-line: #d9b874; --stub-shadow: 0 0 0 4px #08080a, 0 0 0 5px rgba(212, 175, 100, .5), 0 30px 60px rgba(0, 0, 0, .8); --stub-inner: rgba(212, 175, 100, .06);
+  --stamp-bg: linear-gradient(180deg, #f4e3b4, #b4924f); --stamp-text: #15110a;
+  --toast-bg: #e8cf96; --toast-text: #15110a;
+}
+[data-theme="deco"] .stub, [data-theme="deco"] .stamp { border-radius: 2px; }
+[data-theme="deco"] .brand h1, [data-theme="deco"] .grid-head h2, [data-theme="deco"] .tab span { letter-spacing: .14em; text-transform: uppercase; }
+[data-theme="deco"] .ball-wrap.on .ball { transform: translateY(-3px) scale(1.1) rotate(45deg); }
+[data-theme="deco"] .ball-wrap.on .ball > * { transform: rotate(-45deg); }
+[data-theme="deco"] .ball, [data-theme="deco"] .pick, [data-theme="deco"] .mini, [data-theme="deco"] .stub-ball { border-radius: 50%; }
+[data-theme="deco"] .tab, [data-theme="deco"] .tier, [data-theme="deco"] .chip, [data-theme="deco"] .btn, [data-theme="deco"] .logo { clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); }
+[data-theme="deco"] .tab.on, [data-theme="deco"] .btn.lock { clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px); }
+[data-theme="deco"] .bonus-pill, [data-theme="deco"] .lucky, [data-theme="deco"] .theme-btn, [data-theme="deco"] .toast { border-radius: 2px; }
+
+/* ───────── 4 · RED VELVET (roulette: red & black, ivory, brass) ───────── */
+:root[data-theme="velvet"] {
+  --bg: #2a0409;
+  --bg-fx:
+    radial-gradient(80% 55% at 50% 0%, #7d101f 0, #4a0712 50%, #1b0206 100%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .12) 0 2px, transparent 2px 6px);
+  --text: #f8eed8; --muted: #cfa9a0;
+  --panel: rgba(20, 0, 3, .45); --fill: rgba(0, 0, 0, .32); --line: rgba(214, 170, 84, .55);
+  --accent: #dcb15a; --accent-2: #a67c2e; --accent-glow: rgba(220, 177, 90, .35); --link: #f0d08a;
+  --radius-card: 18px; --radius-ui: 10px; --blur: none;
+  --card-shadow: inset 0 0 40px rgba(0, 0, 0, .35);
+  --font-body: var(--font-lora); --font-head: var(--font-cinzel); --font-ball: var(--font-cinzel); --font-time: var(--font-cinzel);
+  --brand-grad: linear-gradient(180deg, #fbe7ae, #dcb15a 55%, #a67c2e);
+  --logo-bg: radial-gradient(circle at 35% 30%, #1c1c1c, #000); --logo-text: #dcb15a;
+  --ticker-bg: #12010a;
+  --digit: #f8eed8; --digit-warn: #f0b84c; --digit-crit: #ff5a5a;
+  --cd-bg: linear-gradient(#150004, #2a0409); --cd-line: rgba(214, 170, 84, .5); --cd-glow: 0 0 14px rgba(220, 177, 90, .35); --live: #dcb15a;
+  --pot-bg: linear-gradient(90deg, rgba(0, 0, 0, .35), rgba(0, 0, 0, .1)); --pot-color: #f0d08a; --pot-sub: #f0a8a0;
+  --tab-on-bg: linear-gradient(180deg, #f0d08a, #b98a30); --tab-on-line: #fbe7ae; --tab-on-shadow: 0 0 20px rgba(220, 177, 90, .45); --tab-on-text: #2a0409; --tab-on-sub: #5c3a08;
+  --win-bg: rgba(0, 0, 0, .3); --win-line: rgba(214, 170, 84, .7); --hit-bg: #dcb15a; --hit-text: #2a0409;
+  /* roulette red (default) — black numbers are set per [data-c] below */
+  --ball-bg: radial-gradient(circle at 34% 28%, #ee4a4a, #b3121f 58%, #6b060f);
+  --ball-shadow: 0 0 0 2px #dcb15a, 0 0 0 4px rgba(0, 0, 0, .55), inset -4px -6px 10px rgba(0, 0, 0, .4), inset 3px 4px 6px rgba(255, 255, 255, .25), 0 6px 12px rgba(0, 0, 0, .6);
+  --ball-text: #f8eed8; --ball-text-fx: 0 1px 2px rgba(0, 0, 0, .6);
+  --sel-bg: radial-gradient(circle at 34% 28%, #ffffff, #f3e8cc 55%, #cdb98b);
+  --sel-shadow: 0 0 0 3px #dcb15a, 0 0 0 5px rgba(0, 0, 0, .5), 0 0 28px rgba(240, 208, 138, .85), 0 10px 16px rgba(0, 0, 0, .6);
+  --sel-text: #2a0409; --sel-text-fx: none; --sel-accent: #f0d08a; --hot-pay: #f0b84c;
+  --lucky-bg: linear-gradient(180deg, #1c1c1c, #000); --lucky-text: #f0d08a; --lucky-shadow: 0 0 0 1.5px #dcb15a, 0 4px 14px rgba(0, 0, 0, .5);
+  --sheet-bg: linear-gradient(180deg, #4a0712, #1b0206); --sheet-line: #dcb15a; --sheet-shadow: 0 -12px 40px rgba(0, 0, 0, .6);
+  --pick-bg: radial-gradient(circle at 34% 28%, #fff, #e5d6b0); --pick-text: #2a0409; --pick-shadow: 0 0 0 2px #dcb15a; --pick-x-bg: #1b0206;
+  --tier-on-bg: linear-gradient(180deg, #f0d08a, #b98a30); --tier-on-text: #2a0409; --tier-on-sub: #5c3a08; --tier-on-line: #fbe7ae; --tier-on-shadow: 0 0 18px rgba(220, 177, 90, .45);
+  --chip-on-bg: radial-gradient(circle at 34% 28%, #1f1f1f, #000); --chip-on-line: #dcb15a; --chip-on-shadow: 0 0 0 1px #dcb15a; --chip-on-text: #f0d08a;
+  --lock-bg: linear-gradient(180deg, #fbe7ae, #dcb15a 50%, #a67c2e); --lock-text: #2a0409;
+  --lock-shadow: 0 6px 0 #6a4a10, 0 12px 22px rgba(0, 0, 0, .55); --lock-shadow-2: 0 6px 0 #6a4a10, 0 0 30px rgba(240, 208, 138, .6);
+  --modal-bg: rgba(15, 0, 3, .85);
+  --stub-bg: linear-gradient(170deg, #5a0a16, #1d0207); --stub-line: #dcb15a; --stub-shadow: 0 0 0 4px rgba(0, 0, 0, .4), 0 30px 60px rgba(0, 0, 0, .7); --stub-inner: rgba(0, 0, 0, .35);
+  --stamp-bg: linear-gradient(180deg, #fbe7ae, #b98a30); --stamp-text: #2a0409;
+  --toast-bg: #f8eed8; --toast-text: #2a0409;
+}
+[data-theme="velvet"] .ball-wrap[data-c="b"]:not(.on) .ball { background: radial-gradient(circle at 34% 28%, #4a4a4a, #151515 58%, #000); }
+[data-theme="velvet"] .brand h1, [data-theme="velvet"] .grid-head h2 { text-transform: uppercase; letter-spacing: .1em; }
+[data-theme="velvet"] .btn.lock span, [data-theme="velvet"] .tab span { font-weight: 800; }
+
+/* ───────── 5 · HERITAGE BOOTH (old-school lottery ticket on cream paper — light theme) ───────── */
+:root[data-theme="booth"] {
+  --bg: #f0e5c8;
+  --bg-fx:
+    radial-gradient(rgba(60, 40, 10, .08) 1px, transparent 1.5px) 0 0 / 7px 7px,
+    linear-gradient(180deg, #f6edd3, #e9dcb8);
+  --text: #1f1a14; --muted: #6b5f4b;
+  --panel: #fbf5e2; --fill: rgba(31, 26, 20, .06); --line: #1f1a14;
+  --accent: #c8281e; --accent-2: #a01c14; --accent-glow: transparent; --link: #0a4a8a;
+  --radius-card: 6px; --radius-ui: 4px; --blur: none;
+  --card-shadow: 4px 4px 0 #1f1a14;
+  --font-body: var(--font-courier); --font-head: var(--font-alfa); --font-ball: var(--font-alfa); --font-time: var(--font-courier);
+  --brand-grad: linear-gradient(#c8281e, #c8281e);
+  --logo-bg: #c8281e; --logo-text: #fbf5e2;
+  --ticker-bg: #1f1a14;
+  --digit: #1f1a14; --digit-warn: #b8650a; --digit-crit: #c8281e;
+  --cd-bg: #fffaf0; --cd-line: #1f1a14; --cd-glow: none; --live: #c8281e;
+  --pot-bg: repeating-linear-gradient(135deg, #f8d56b 0 12px, #f2c744 12px 24px); --pot-color: #1f1a14; --pot-sub: #7a1a12;
+  --tab-on-bg: #1f1a14; --tab-on-line: #1f1a14; --tab-on-shadow: 3px 3px 0 #c8281e; --tab-on-text: #fbf5e2; --tab-on-sub: #f8d56b;
+  --win-bg: #f8d56b; --win-line: #1f1a14; --hit-bg: #2a8a3c; --hit-text: #fff;
+  /* flat printed discs */
+  --ball-bg: #f3be3a;
+  --ball-shadow: 0 0 0 3px #1f1a14, 3px 4px 0 3px #1f1a14;
+  --ball-text: #1f1a14; --ball-text-fx: none;
+  --sel-bg: #c8281e;
+  --sel-shadow: 0 0 0 3px #1f1a14, 3px 4px 0 3px #1f1a14, 0 0 0 7px #fbf5e2, 0 0 0 9px #c8281e;
+  --sel-text: #fbf5e2; --sel-text-fx: none; --sel-accent: #c8281e; --hot-pay: #c8281e;
+  --lucky-bg: #fbf5e2; --lucky-text: #1f1a14; --lucky-shadow: 0 0 0 2px #1f1a14, 3px 3px 0 2px #1f1a14;
+  --sheet-bg: #fbf5e2; --sheet-line: #1f1a14; --sheet-shadow: 0 -4px 0 #1f1a14, 0 -14px 30px rgba(0, 0, 0, .25);
+  --pick-bg: #c8281e; --pick-text: #fbf5e2; --pick-shadow: 0 0 0 2px #1f1a14; --pick-x-bg: #1f1a14;
+  --tier-on-bg: #1f1a14; --tier-on-text: #f8d56b; --tier-on-sub: #fbf5e2; --tier-on-line: #1f1a14; --tier-on-shadow: 3px 3px 0 #c8281e;
+  --chip-on-bg: #1f1a14; --chip-on-line: #1f1a14; --chip-on-shadow: 2px 2px 0 #c8281e; --chip-on-text: #f8d56b;
+  --lock-bg: #c8281e; --lock-text: #fbf5e2;
+  --lock-shadow: 0 0 0 3px #1f1a14, 5px 6px 0 3px #1f1a14; --lock-shadow-2: 0 0 0 3px #1f1a14, 5px 6px 0 3px #1f1a14, 0 0 0 7px #f8d56b;
+  --modal-bg: rgba(31, 26, 20, .75);
+  --stub-bg: #fbf5e2; --stub-line: #1f1a14; --stub-shadow: 6px 6px 0 #1f1a14; --stub-inner: #f3e8c8;
+  --stamp-bg: #2a8a3c; --stamp-text: #fff;
+  --toast-bg: #1f1a14; --toast-text: #fbf5e2;
+}
+[data-theme="booth"] .aurora { background: var(--bg-fx); }
+[data-theme="booth"] .ticker span { color: #e8dcb8; }
+[data-theme="booth"] .brand h1 { color: #c8281e; background: none; -webkit-text-fill-color: #c8281e; text-transform: uppercase; }
+[data-theme="booth"] .logo { box-shadow: 0 0 0 2px #1f1a14, 3px 3px 0 2px #1f1a14; border-radius: 50%; }
+[data-theme="booth"] .card, [data-theme="booth"] .bal, [data-theme="booth"] .jackpot, [data-theme="booth"] .tab, [data-theme="booth"] .icon-btn { border-width: 2px; }
+[data-theme="booth"] .tab { background: #fbf5e2; }
+[data-theme="booth"] .tab small, [data-theme="booth"] .cd-cap, [data-theme="booth"] .cd-label, [data-theme="booth"] .stake-label { font-weight: 700; }
+[data-theme="booth"] .cd-digits { border-width: 2px; box-shadow: 3px 3px 0 #1f1a14; background-image: linear-gradient(90deg, transparent 49.5%, rgba(31, 26, 20, .25) 50%, transparent 50.5%); }
+[data-theme="booth"] .jackpot { border-width: 2px; }
+[data-theme="booth"] .jackpot b { text-shadow: none; }
+[data-theme="booth"] .win-ball b, [data-theme="booth"] .stub h3, [data-theme="booth"] .slip-sum .win b { color: #c8281e; text-shadow: none; }
+[data-theme="booth"] .win-ball em { color: #1f1a14; font-weight: 700; }
+[data-theme="booth"] .bonus-pill { border: 2px solid #1f1a14; background: #fbf5e2; }
+[data-theme="booth"] .bonus-pill.hit { background: #2a8a3c; color: #fff; }
+[data-theme="booth"] .chip, [data-theme="booth"] .chip-input, [data-theme="booth"] .tier, [data-theme="booth"] .btn.ghost, [data-theme="booth"] .mini { border: 2px solid #1f1a14; background: #fffaf0; }
+[data-theme="booth"] .tier.on, [data-theme="booth"] .chip.on, [data-theme="booth"] .chip-input.on { background: #1f1a14; }
+[data-theme="booth"] .lucky { border-radius: 4px; }
+[data-theme="booth"] .btn.lock::after { display: none; }
+[data-theme="booth"] .toast { border-radius: 4px; }
+[data-theme="booth"] .stub { border-radius: 4px; border-width: 3px; }
+[data-theme="booth"] .stub dl { border: 2px dashed #1f1a14; }
+[data-theme="booth"] .stamp { border: 3px solid #1f1a14; border-radius: 4px; }
+[data-theme="booth"] .stub-ball { box-shadow: var(--ball-shadow); }
+[data-theme="booth"] .ball-wrap.on .ball-icon { filter: none; }
+[data-theme="booth"] .theme-btn { background: #fbf5e2; border: 2px solid #1f1a14; }
+[data-theme="booth"] .theme-btn.on { background: #c8281e; color: #fbf5e2; }
+[data-theme="booth"] .pick small { color: #fbf5e2; }
+
+[data-theme="booth"] .bal b { font-size: 12px; } [data-theme="booth"] .brand p { font-size: 11px; }
