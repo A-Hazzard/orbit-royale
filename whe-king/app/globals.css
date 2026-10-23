@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./themes.css";
+@import "./layouts.css";
 
 /* Base tokens = "Midnight Gold" (see themes.css for the other four) */
 :root {

@@ -1,12 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import {
   ATTACH_TIERS, CHIPS, CURRENT_ISSUE, DRAWS, HOT, LAST_DRAW, MARKS, MOCK_WINNERS, payoutFor,
 } from "@/lib/data";
 import { fx, setMuted } from "@/lib/fx";
 import { useDrawClock } from "@/lib/useDraw";
-import { THEMES, useTheme } from "@/lib/useTheme";
-import Countdown from "./Countdown";
+import { LAYOUTS, THEMES, useLayout, useTheme } from "@/lib/prefs";
+import Countdown, { MiniClock } from "./Countdown";
 import Confetti from "./Confetti";
 
 type Tier = (typeof ATTACH_TIERS)[number]["id"];
@@ -17,6 +17,10 @@ const secs = (i: number) => DRAWS[i].h * 3600 + DRAWS[i].m * 60;
 const MAX_PICKS = 10;
 const ROULETTE_RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const START_BALANCE = 500;
+// European roulette wheel order (without the zero) for the wheel layout.
+const WHEEL = [26, 3, 35, 12, 28, 7, 29, 18, 22, 9, 31, 14, 20, 1, 33, 16, 24, 5, 10, 23, 8, 30, 11, 36, 13, 27, 6, 34, 17, 25, 2, 21, 4, 19, 15, 32];
+const STEP_NAMES = ["Pick numbers", "Set stakes", "Review & lock"];
+const noop = () => () => {};
 
 function StakeRow({ label, value, onChange, allowOff }: { label: string; value: number; onChange: (v: number) => void; allowOff?: boolean }) {
   const [custom, setCustom] = useState("");
@@ -50,6 +54,9 @@ function StakeRow({ label, value, onChange, allowOff }: { label: string; value: 
 export default function PlayWhe() {
   const clock = useDrawClock();
   const [theme, setTheme] = useTheme();
+  const [layout, setLayout] = useLayout();
+  const mounted = useSyncExternalStore(noop, () => true, () => false);
+  const [step, setStep] = useState(0);
   const [drawIdx, setDrawIdx] = useState<number | null>(null);
   const [picks, setPicks] = useState<number[]>([]);
   const [base, setBase] = useState(5);
@@ -130,9 +137,250 @@ export default function PlayWhe() {
   };
 
   const urgent = remaining > 0 && remaining <= 10;
+  const odds = ATTACH_TIERS.find((t) => t.id === tier)?.odds ?? 0;
+  const sorted = [...picks].sort((a, b) => a - b);
+
+  const ballBtn = (n: number, icon: string, name: string) => {
+    const on = picks.includes(n);
+    const hot = n in HOT;
+    return (
+      <button key={n} data-c={ROULETTE_RED.has(n) ? "r" : "b"} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${name}, pays ${payoutFor(n)} to 1`}
+        className={`ball-wrap ${on ? "on" : ""} ${hot ? "hot" : ""} ${pop === n ? "pop" : ""} ${spinning === n ? "spin" : ""}`}>
+        <span className="ball">
+          <span className="ball-num">{n}</span>
+          <span className="ball-icon">{icon}</span>
+          {hot && <span className="flame">🔥</span>}
+        </span>
+        <span className="pay">{money(payoutFor(n))}</span>
+      </button>
+    );
+  };
+
+  const pot = (
+    <div className="jackpot">
+      <span>CURRENT POT</span>
+      <b>TT$ 1,284,350</b>
+      <i>🔥 312 players locked in this draw</i>
+    </div>
+  );
+
+  const hero = (
+    <div className="hero card">
+      <Countdown remaining={Math.max(0, remaining)} ready={clock.ready} />
+      {pot}
+    </div>
+  );
+
+  const tabs = (
+    <div className="tabs" role="tablist">
+      {DRAWS.map((d, i) => {
+        const closed = clock.ready && i < closedBefore;
+        return (
+          <button key={d.label} role="tab" aria-selected={sel === i} disabled={closed}
+            className={`tab ${sel === i ? "on" : ""}`} onClick={() => { fx.chip(); setDrawIdx(i); }}>
+            <span>{d.label}</span>
+            <small>{closed ? "CLOSED" : i === clock.nextIdx ? "NEXT" : "OPEN"}</small>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const last = (
+    <div className="last card">
+      <div className="last-head">
+        <span>LAST DRAW · #{LAST_DRAW.issue}</span>
+        <button className="link">How to play</button>
+      </div>
+      <div className="last-row">
+        <div className="win-ball">
+          <em>WINNER</em>
+          <b>{LAST_DRAW.winning}</b>
+          <small>{MARKS[LAST_DRAW.winning - 1].icon} {MARKS[LAST_DRAW.winning - 1].name}</small>
+        </div>
+        <div className="bonus">
+          {(Object.keys(LAST_DRAW.bonus) as Tier[]).map((k) => (
+            <span key={k} className={`bonus-pill ${LAST_DRAW.bonus[k] ? "hit" : ""}`}>{k}{LAST_DRAW.bonus[k] ? " ✓" : ""}</span>
+          ))}
+        </div>
+        <div className="trail">
+          {LAST_DRAW.trail.map((n) => (<span key={n} className="mini">{n}</span>))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const gridHead = (
+    <div className="grid-head">
+      <h2>Pick your lucky numbers</h2>
+      <button className="lucky" onClick={luckyPick}>🎲 Lucky Pick</button>
+    </div>
+  );
+
+  const legend = <p className="legend"><span className="flame">🔥</span> Hot number — payout reduced · Payouts shown per 1 stake</p>;
+
+  const numberGrid = (
+    <>
+      <div className="grid card" role="group" aria-label="Lucky numbers 1 to 36">
+        {MARKS.map(({ n, icon, name }) => ballBtn(n, icon, name))}
+      </div>
+      {legend}
+    </>
+  );
+
+  const chartBoard = (
+    <>
+      <div className="chart" role="group" aria-label="Marks 1 to 36">
+        {MARKS.map(({ n, icon, name }) => {
+          const on = picks.includes(n);
+          const hot = n in HOT;
+          return (
+            <button key={n} data-c={ROULETTE_RED.has(n) ? "r" : "b"} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${name}, pays ${payoutFor(n)} to 1`}
+              className={`mark ${on ? "on" : ""} ${hot ? "hot" : ""} ${pop === n ? "pop" : ""} ${spinning === n ? "spin" : ""}`}>
+              <span className="ball mark-n"><span className="ball-num">{n}</span></span>
+              <span className="mark-icon">{icon}</span>
+              <span className="mark-name">{name}</span>
+              <span className="mark-pay">{hot && "🔥 "}{money(payoutFor(n))}</span>
+              {on && <span className="mark-tick">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+      {legend}
+    </>
+  );
+
+  const wheelBoard = (
+    <div className="wheel-wrap">
+      <div className="wheel" role="group" aria-label="Lucky numbers wheel">
+        <div className="wheel-rim" aria-hidden />
+        {WHEEL.map((n, i) => {
+          const m = MARKS[n - 1];
+          const on = picks.includes(n);
+          return (
+            <button key={n} data-c={ROULETTE_RED.has(n) ? "r" : "b"} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${m.name}, pays ${payoutFor(n)} to 1`}
+              style={{ "--a": `${i * 10}deg` } as CSSProperties}
+              className={`ball-wrap wheel-num ${on ? "on" : ""} ${n in HOT ? "hot" : ""} ${pop === n ? "pop" : ""} ${spinning === n ? "spin" : ""}`}>
+              <span className="ball"><span className="ball-num">{n}</span>{n in HOT && <span className="flame">🔥</span>}</span>
+            </button>
+          );
+        })}
+        <div className="wheel-center">
+          <MiniClock remaining={Math.max(0, remaining)} ready={clock.ready} />
+          <div className="wheel-pot">{pot}</div>
+          <button className="lucky" onClick={luckyPick}>🎲 Spin a number</button>
+        </div>
+      </div>
+      <p className="legend">Tap the wheel to pick · 🔥 hot numbers pay less · Order matches a roulette wheel</p>
+    </div>
+  );
+
+  const stakeControls = (
+    <>
+      <div className="tiers">
+        <div className="stake-label">Attach bonus</div>
+        <div className="tier-row">
+          {ATTACH_TIERS.map((t) => (
+            <button key={t.id} className={`tier ${tier === t.id ? "on" : ""}`} onClick={() => { fx.chip(); setTier(t.id); }}>
+              <b>{t.id}</b><span>{t.odds}:1</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <StakeRow label="Base stake (TTD)" value={base} onChange={setBase} />
+      <StakeRow label="Attach stake (TTD)" value={attach} onChange={setAttach} allowOff />
+    </>
+  );
+
+  const pickChips = picks.length === 0 ? (
+    <span className="hint">Tap numbers to build your ticket</span>
+  ) : (
+    <>
+      {picks.map((n) => (<button key={n} className="pick" onClick={() => toggle(n)} title="Remove">{n}<small>×</small></button>))}
+      {picks.length >= 3 && <span className="combo">🔥 {picks.length} NUMBER COMBO</span>}
+    </>
+  );
+
+  const slip = (
+    <aside className={`slip ${open ? "open" : ""} ${shake ? "shake" : ""}`}>
+      <button className="slip-grab" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Toggle stake settings"><i /></button>
+      <div className="slip-picks">{pickChips}</div>
+      <div className="slip-body">{stakeControls}</div>
+      <div className="slip-sum">
+        <div><span>Total stake</span><b>TT${money(total)}</b></div>
+        <div className="win"><span>Win up to</span><b key={maxWin}>TT${money(maxWin)}</b></div>
+      </div>
+      <div className="slip-actions">
+        <button className="btn ghost" onClick={() => { setPicks([]); fx.drop(); }}>Cancel</button>
+        <button className="btn ghost" onClick={() => { setPicks([12, 22, 8]); fx.chip(); say("Loaded your last ticket"); }}>Recent</button>
+        <button className="btn lock" onClick={lockIn} disabled={locked}>
+          <span>{locked ? "DRAW CLOSED" : "LOCK IT IN"}</span>
+          <small>{picks.length ? `TT$${money(total)}` : "pick a number"}</small>
+        </button>
+      </div>
+    </aside>
+  );
+
+  const goNext = () => {
+    if (step === 0 && !picks.length) { setShake(true); setTimeout(() => setShake(false), 500); say("Pick at least one lucky number"); return; }
+    fx.chip();
+    setStep((x) => Math.min(2, x + 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const stepsBody = (
+    <>
+      <ol className="stepper">
+        {STEP_NAMES.map((nm, i) => (
+          <li key={nm} className={i === step ? "cur" : i < step ? "done" : ""}>
+            <button onClick={() => (i === 0 || picks.length) && setStep(i)} aria-current={i === step}>
+              <i>{i < step ? "✓" : i + 1}</i><span>{nm}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      {step === 0 && (<>{gridHead}{numberGrid}</>)}
+      {step === 1 && (
+        <div className="card step-card">
+          <h2>Set your stakes</h2>
+          <div className="slip-picks wrap">{pickChips}</div>
+          {stakeControls}
+          <div className="slip-sum"><div><span>Per number</span><b>TT${money(base + attach)}</b></div><div className="win"><span>Total stake</span><b>TT${money(total)}</b></div></div>
+        </div>
+      )}
+      {step === 2 && (
+        <div className="card step-card receipt">
+          <h2>Review your ticket</h2>
+          <p className="stub-sub">{DRAWS[sel].label} · Issue #{issue}</p>
+          <ul className="review">
+            {sorted.map((n) => (
+              <li key={n}>
+                <span className="ball mark-n"><span className="ball-num">{n}</span></span>
+                <div><b>{MARKS[n - 1].icon} {MARKS[n - 1].name}</b><small>Base {money(base)} × {payoutFor(n)} · {tier} {money(attach)} × {odds}</small></div>
+                <em>TT${money(base * payoutFor(n) + attach * odds)}</em>
+              </li>
+            ))}
+          </ul>
+          <div className="slip-sum"><div><span>Total stake</span><b>TT${money(total)}</b></div><div className="win"><span>Win up to</span><b>TT${money(maxWin)}</b></div></div>
+        </div>
+      )}
+    </>
+  );
+
+  const stepBar = (
+    <div className={`stepbar ${shake ? "shake" : ""}`}>
+      <button className="btn ghost" onClick={() => (step === 0 ? setPicks([]) : setStep(step - 1))}>{step === 0 ? "Clear" : "Back"}</button>
+      <div className="stepbar-sum"><span>{picks.length} picked</span><b>TT${money(total)}</b></div>
+      {step < 2 ? (
+        <button className="btn lock" onClick={goNext}><span>CONTINUE</span><small>{STEP_NAMES[step + 1]}</small></button>
+      ) : (
+        <button className="btn lock" onClick={lockIn} disabled={locked}><span>{locked ? "DRAW CLOSED" : "LOCK IT IN"}</span><small>TT${money(total)}</small></button>
+      )}
+    </div>
+  );
 
   return (
-    <div className={`app ${urgent ? "urgent" : ""}`}>
+    <div className={`app layout-${layout} ${urgent ? "urgent" : ""} ${mounted ? "" : "hydrating"}`}>
       <Confetti burst={burst} />
       <div className="aurora" aria-hidden />
 
@@ -143,14 +391,24 @@ export default function PlayWhe() {
         </div>
       </div>
 
-      <nav className="themes" aria-label="Template">
-        <span>TEMPLATE</span>
-        {THEMES.map((t) => (
-          <button key={t.id} className={`theme-btn ${theme === t.id ? "on" : ""}`} aria-pressed={theme === t.id} onClick={() => { fx.chip(); setTheme(t.id); }}>
-            <i style={{ background: t.swatch }} />{t.name}
-          </button>
-        ))}
-      </nav>
+      <div className="pickers">
+        <nav className="themes" aria-label="Layout">
+          <span>LAYOUT</span>
+          {LAYOUTS.map((l) => (
+            <button key={l.id} className={`theme-btn ${layout === l.id ? "on" : ""}`} aria-pressed={layout === l.id} onClick={() => { fx.chip(); setLayout(l.id); }}>
+              <i className="glyph">{l.glyph}</i>{l.name}
+            </button>
+          ))}
+        </nav>
+        <nav className="themes" aria-label="Template">
+          <span>TEMPLATE</span>
+          {THEMES.map((t) => (
+            <button key={t.id} className={`theme-btn ${theme === t.id ? "on" : ""}`} aria-pressed={theme === t.id} onClick={() => { fx.chip(); setTheme(t.id); }}>
+              <i style={{ background: t.swatch }} />{t.name}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       <header className="top">
         <div className="brand">
@@ -171,123 +429,14 @@ export default function PlayWhe() {
 
       <main className="layout">
         <section className="col-main">
-          {/* Timer hero */}
-          <div className="hero card">
-            <Countdown remaining={Math.max(0, remaining)} ready={clock.ready} />
-            <div className="jackpot">
-              <span>CURRENT POT</span>
-              <b>TT$ 1,284,350</b>
-              <i>🔥 312 players locked in this draw</i>
-            </div>
-          </div>
-
-          {/* Draw tabs */}
-          <div className="tabs" role="tablist">
-            {DRAWS.map((d, i) => {
-              const closed = clock.ready && i < closedBefore;
-              return (
-                <button key={d.label} role="tab" aria-selected={sel === i} disabled={closed}
-                  className={`tab ${sel === i ? "on" : ""}`} onClick={() => { fx.chip(); setDrawIdx(i); }}>
-                  <span>{d.label}</span>
-                  <small>{closed ? "CLOSED" : i === clock.nextIdx ? "NEXT" : "OPEN"}</small>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Last draw */}
-          <div className="last card">
-            <div className="last-head">
-              <span>LAST DRAW · #{LAST_DRAW.issue}</span>
-              <button className="link">How to play</button>
-            </div>
-            <div className="last-row">
-              <div className="win-ball">
-                <em>WINNER</em>
-                <b>{LAST_DRAW.winning}</b>
-                <small>{MARKS[LAST_DRAW.winning - 1].icon} {MARKS[LAST_DRAW.winning - 1].name}</small>
-              </div>
-              <div className="bonus">
-                {(Object.keys(LAST_DRAW.bonus) as Tier[]).map((k) => (
-                  <span key={k} className={`bonus-pill ${LAST_DRAW.bonus[k] ? "hit" : ""}`}>{k}{LAST_DRAW.bonus[k] ? " ✓" : ""}</span>
-                ))}
-              </div>
-              <div className="trail">
-                {LAST_DRAW.trail.map((n) => (<span key={n} className="mini">{n}</span>))}
-              </div>
-            </div>
-          </div>
-
-          {/* Number grid */}
-          <div className="grid-head">
-            <h2>Pick your lucky numbers</h2>
-            <button className="lucky" onClick={luckyPick}>🎲 Lucky Pick</button>
-          </div>
-          <div className="grid card" role="group" aria-label="Lucky numbers 1 to 36">
-            {MARKS.map(({ n, icon, name }) => {
-              const on = picks.includes(n);
-              const hot = n in HOT;
-              return (
-                <button key={n} data-c={ROULETTE_RED.has(n) ? "r" : "b"} onClick={() => toggle(n)} aria-pressed={on} aria-label={`${n} ${name}, pays ${payoutFor(n)} to 1`}
-                  className={`ball-wrap ${on ? "on" : ""} ${hot ? "hot" : ""} ${pop === n ? "pop" : ""} ${spinning === n ? "spin" : ""}`}>
-                  <span className="ball">
-                    <span className="ball-num">{n}</span>
-                    <span className="ball-icon">{icon}</span>
-                    {hot && <span className="flame">🔥</span>}
-                  </span>
-                  <span className="pay">{money(payoutFor(n))}</span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="legend"><span className="flame">🔥</span> Hot number — payout reduced · Payouts shown per 1 stake</p>
+          {layout === "grid" && (<>{hero}{tabs}{last}{gridHead}{numberGrid}</>)}
+          {layout === "chart" && (<>{hero}{tabs}{last}{gridHead}{chartBoard}</>)}
+          {layout === "wheel" && (<>{tabs}{wheelBoard}{last}</>)}
+          {layout === "steps" && (<>{hero}{tabs}{stepsBody}</>)}
         </section>
-
-        {/* Bet slip */}
-        <aside className={`slip ${open ? "open" : ""} ${shake ? "shake" : ""}`}>
-          <button className="slip-grab" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Toggle stake settings"><i /></button>
-
-          <div className="slip-picks">
-            {picks.length === 0 ? (
-              <span className="hint">Tap numbers above to build your ticket</span>
-            ) : (
-              <>
-                {picks.map((n) => (<button key={n} className="pick" onClick={() => toggle(n)} title="Remove">{n}<small>×</small></button>))}
-                {picks.length >= 3 && <span className="combo">🔥 {picks.length} NUMBER COMBO</span>}
-              </>
-            )}
-          </div>
-
-          <div className="slip-body">
-            <div className="tiers">
-              <div className="stake-label">Attach bonus</div>
-              <div className="tier-row">
-                {ATTACH_TIERS.map((t) => (
-                  <button key={t.id} className={`tier ${tier === t.id ? "on" : ""}`} onClick={() => { fx.chip(); setTier(t.id); }}>
-                    <b>{t.id}</b><span>{t.odds}:1</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <StakeRow label="Base stake (TTD)" value={base} onChange={setBase} />
-            <StakeRow label="Attach stake (TTD)" value={attach} onChange={setAttach} allowOff />
-          </div>
-
-          <div className="slip-sum">
-            <div><span>Total stake</span><b>TT${money(total)}</b></div>
-            <div className="win"><span>Win up to</span><b key={maxWin}>TT${money(maxWin)}</b></div>
-          </div>
-
-          <div className="slip-actions">
-            <button className="btn ghost" onClick={() => { setPicks([]); fx.drop(); }}>Cancel</button>
-            <button className="btn ghost" onClick={() => { setPicks([12, 22, 8]); fx.chip(); say("Loaded your last ticket"); }}>Recent</button>
-            <button className="btn lock" onClick={lockIn} disabled={locked}>
-              <span>{locked ? "DRAW CLOSED" : "LOCK IT IN"}</span>
-              <small>{picks.length ? `TT$${money(total)}` : "pick a number"}</small>
-            </button>
-          </div>
-        </aside>
+        {layout !== "steps" && slip}
       </main>
+      {layout === "steps" && stepBar}
 
       <footer className="foot">
         Prototype only — no real money, no real draws. 18+ · Play responsibly.
@@ -315,7 +464,7 @@ export default function PlayWhe() {
               <div className="big"><dt>Win up to</dt><dd>TT${money(ticket.max)}</dd></div>
             </dl>
             <code>{ticket.id}</code>
-            <button className="btn lock" onClick={() => { setTicket(null); setPicks([]); setOpen(false); }}><span>PLAY AGAIN</span></button>
+            <button className="btn lock" onClick={() => { setTicket(null); setPicks([]); setOpen(false); setStep(0); }}><span>PLAY AGAIN</span></button>
           </div>
         </div>
       )}

@@ -9,6 +9,17 @@ npm run dev     # http://localhost:3000
 
 Stack: Next.js (App Router) · TypeScript · Tailwind v4 (plus hand-written CSS) · no other runtime deps.
 
+## Layouts × templates (4 × 5 = 20 combinations)
+
+Layouts change the *interface*; templates change the *look*. Any layout works with any template. Switch with the **Layout** bar, or deep-link with `?layout=grid|chart|wheel|steps&theme=gold|felt|deco|velvet|booth`.
+
+| `?layout=` | Layout | Idea |
+|---|---|---|
+| `grid` | Grid | Timer hero, draw tabs, 6-column number balls, bottom bet sheet (closest to the original site) |
+| `chart` | Mark Chart | Big tappable cards with the animal/mark, name and payout, like the printed Play Whe chart |
+| `wheel` | Wheel | Pick numbers around a roulette wheel (real wheel order); the countdown lives in the hub |
+| `steps` | Steps | One decision per screen: pick numbers → set stakes → review & lock, with a persistent bottom bar |
+
 ## Templates
 
 Switch live with the **Template** bar at the top, or deep-link with `?theme=`:

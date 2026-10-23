@@ -40,3 +40,15 @@ export default function Countdown({ remaining, ready }: { remaining: number; rea
     </div>
   );
 }
+
+/** Single-line clock used inside the roulette wheel. */
+export function MiniClock({ remaining, ready }: { remaining: number; ready: boolean }) {
+  const h = Math.floor(remaining / 3600), m = Math.floor((remaining % 3600) / 60), s = remaining % 60;
+  const tone = remaining <= 60 ? "crit" : remaining <= 600 ? "warn" : "calm";
+  return (
+    <div className={`mini-clock cd-${tone}`}>
+      <small>BETS CLOSE IN</small>
+      <b className="cd-digit" key={remaining}>{ready ? `${pad(h)}:${pad(m)}:${pad(s)}` : "--:--:--"}</b>
+    </div>
+  );
+}
