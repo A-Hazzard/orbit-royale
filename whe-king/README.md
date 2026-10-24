@@ -9,6 +9,22 @@ npm run dev     # http://localhost:3000
 
 Stack: Next.js (App Router) · TypeScript · Tailwind v4 (plus hand-written CSS) · no other runtime deps.
 
+## Run it on GitHub Pages
+
+The repo already serves the Unity game from the root of `main`, so this app is published as a static site in its own folder, `king/`:
+
+**https://a-hazzard.github.io/orbit-royale/king/**
+
+It goes live once the branch is merged into `main` (Settings > Pages must be set to "Deploy from a branch", `main`, `/ (root)`). To republish after changing the app:
+
+```bash
+cd whe-king
+npm run build:pages   # builds a static export and copies it to ../king
+git add ../king && git commit -m "Republish Pages build" && git push
+```
+
+`npm run dev` and `npm run build` are unaffected (no base path, normal Next.js server).
+
 ## Layouts × templates (4 × 5 = 20 combinations)
 
 Layouts change the *interface*; templates change the *look*. Any layout works with any template. Switch with the **Layout** bar, or deep-link with `?layout=grid|chart|wheel|steps&theme=gold|felt|deco|velvet|booth`.

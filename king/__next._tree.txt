@@ -1,0 +1,13 @@
+:HL["/orbit-royale/king/_next/static/chunks/3dvmt91sj-tb6.css","style"]
+:HL["/orbit-royale/king/_next/static/media/0acc7fdf55eb3220-s.p.3oprs0vbfre0x.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/1b99372b3eaef0c8-s.p.1gsd1jahc5dg_.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/2a65768255d6b625-s.p.3u4lli0-axodc.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/5f440d3eea613716-s.p.1xmps1tcyqv34.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/7b3954b250246604-s.p.40gj5_xrkze6a.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/85d221305b371308-s.p.2j3mifs533dy9.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/87d3ffffac5dafea-s.p.3a10o7es2neby.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/8c2eb9ceedecfc8e-s.p.23aeddxv5enbo.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/cc014fcb166cf364-s.p.2cu9iw-l3ih8o.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/orbit-royale/king/_next/static/media/f8c9e97bf43e5c06-s.p.18vgu6pxqeqca.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+1:[["children",{"s":"__PAGE__","h":160}]]
+0:{"b":"VBFyF8xdw8zv5sftTryco","t":{"t":{"s":"","h":80,"c":"$Q1"}}}

@@ -1,0 +1,4 @@
+:HL["/orbit-royale/king/_next/static/chunks/3dvmt91sj-tb6.css","style"]
+2:[["children",{"s":"__PAGE__","h":160}]]
+1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
+0:{"b":"VBFyF8xdw8zv5sftTryco","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
